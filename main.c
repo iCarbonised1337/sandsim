@@ -15,21 +15,22 @@ int main()
     //--------------------------------------------------------------------------------------
     const int screenWidth = 1920;
     const int screenHeight = 1080;
-    Color Teal = {0, 128, 128, 255};
     float posX = 100;
     float posY = 100;
     float radius = 10;
     float push = 5000; // px per frametime
-    Vector2 Vel; // initialising the velocity vector
     float coeff_restitution = 0.5;
-    float drag_coeff = 0;
+    float drag_coeff = 0.5;
     float speed = 0;
     float mass = 1;
+    float DelT;
+    Color Teal = {0, 128, 128, 255};
+    Vector2 Vel; // initialising the velocity vector
     Vector2 accel;
     Vector2 friction; // acceleration due to friction, NOT the frictional force itself
     char string_speed[5]= "";
-    float DelT;
-    float max_speed = 100;
+    
+    //float max_speed = 1000;
     InitWindow(screenWidth, screenHeight, "SandSim");
     // InitAudioDevice();
     SetTargetFPS(60);               // Set our game to run at 60 frames-per-second
@@ -41,7 +42,6 @@ int main()
     // Event Handling
         //----------------------------------------------------------------------------------
     
-    push = 5000;
     DelT = GetFrameTime();
     if (IsKeyDown(KEY_W))
     {
@@ -85,8 +85,8 @@ int main()
 
 
     // make friction work
-        friction.x = -drag_coeff*Vel.x*signf(Vel.x);
-        friction.y = -drag_coeff*Vel.y*signf(Vel.y);
+        friction.x = -drag_coeff*Vel.x;
+        friction.y = -drag_coeff*Vel.y;
         //----------------------------------------------------------------------------------
     // Update
         //----------------------------------------------------------------------------------
@@ -97,22 +97,14 @@ int main()
     // speed calculation for displaying
     speed = Vector2Length(Vel);
 
-    if (speed>max_speed)
-    {
-    while (speed>max_speed)
-    {
-        Vel = Vector2Scale(Vel,0.9);
-    }
-    }
-    
         //----------------------------------------------------------------------------------
     // Draw
         //----------------------------------------------------------------------------------
         BeginDrawing();
-            ClearBackground(Teal);
-            sprintf(string_speed,"%0.2f", speed);
-            DrawText(string_speed,0,0,20,BLACK);
-            DrawCircle(posX,posY,radius,CLITERAL(Color){ 0, 0, 0, 255 } );
+            ClearBackground(BLACK);
+            sprintf(string_speed,"%0.0f", speed);
+            DrawText(string_speed,0,0,20,WHITE);
+            DrawCircle(posX,posY,radius,Teal);
         EndDrawing();
         //----------------------------------------------------------------------------------
     }
