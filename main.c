@@ -18,9 +18,9 @@ int main()
     float posX = 100;
     float posY = 100;
     float radius = 10;
-    float push = 5000; // px per frametime
+    float push = 1000; // px per frametime
     float coeff_restitution = 0.5;
-    float drag_coeff = 0.5;
+    float drag_coeff = 1;
     float speed = 0;
     float mass = 1;
     float DelT;
