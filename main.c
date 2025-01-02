@@ -7,6 +7,16 @@ int signf(float x) {
     return (x > 0.0f) - (x < 0.0f);
 }
 //------------------------------------------------------------------------------------
+typedef struct particle {
+    float mass; // particle mass
+    float drag; // drag coeffiecent experienced
+    Vector2 pos;
+    Vector2 vel; // initialising the velocity vector
+    Vector2 accel; // current acceleration of the particle
+    Vector2 friction; // acceleration due to friction, NOT the frictional force itself
+    Vector2 forceDirn; /*The direction the ball will accelerate in*/
+} particle;
+//------------------------------------------------------------------------------------
 // Program main entry point
 //------------------------------------------------------------------------------------
 int main()
@@ -15,20 +25,20 @@ int main()
     //--------------------------------------------------------------------------------------
     const int screenWidth = 1920;
     const int screenHeight = 1080;
-    float posX = 100;
-    float posY = 100;
-    float radius = 10;
+    float radius = 10; // radius of the balls
     float push = 1000; // px per frametime
     float coeff_restitution = 0.5;
-    float drag_coeff = 1;
-    float speed = 0;
-    float mass = 1;
-    float DelT;
-    Color Teal = {0, 128, 128, 255};
-    Vector2 Vel; // initialising the velocity vector
-    Vector2 accel;
-    Vector2 friction; // acceleration due to friction, NOT the frictional force itself
-    char string_speed[5]= "";
+    float speed = 0; // current speed of the particle
+    float DelT; // frametime of current frame
+    Color Teal = {0, 128, 128, 255}; // The color teal
+
+    particle ball; // creating a ball
+    ball.mass = 1;
+    ball.drag = 0.5;
+
+    ball.pos.x = 100;
+    ball.pos.y = 100;
+    char string_speed[5]= ""; //string to store the speed as a string
     
     //float max_speed = 1000;
     InitWindow(screenWidth, screenHeight, "SandSim");
@@ -43,59 +53,72 @@ int main()
         //----------------------------------------------------------------------------------
     
     DelT = GetFrameTime();
+    
+    ball.forceDirn = Vector2Zero(); // reset the force direction vector for this frame
+
     if (IsKeyDown(KEY_W))
     {
-        accel.y = -push/mass;
+        ball.forceDirn.y -= 1;
     }
     if (IsKeyDown(KEY_A))
     {
-        accel.x += -push/mass;
+        ball.forceDirn.x -= 1;
     }
     if (IsKeyDown(KEY_S))
     {
-        accel.y += push/mass;
+        ball.forceDirn.y += 1;
     }
     if (IsKeyDown(KEY_D))
     {
-        accel.x += push/mass;
+        ball.forceDirn.x += 1;
+    }
+    if (IsKeyDown(KEY_SPACE))
+    {
+        ball.vel = Vector2Zero();
     }
 
+    // Normalise the forceDirn vector
+    ball.forceDirn = Vector2Normalize(ball.forceDirn);
+
+    // now the acceleration will be the same in all directions, i.e moving diagonally wont give you 1.41 times the max force
+    ball.accel = Vector2Scale(ball.forceDirn, push/ball.mass);
+
     //Check if ball is inside the frame in X and Y seperately
-    if ( (posX+(radius)>screenWidth))
+    if ( (ball.pos.x+(radius)>screenWidth))
     {
-        posX += -radius;
-        Vel.x-=(1+coeff_restitution)*Vel.x;
+        ball.pos.x = screenWidth-radius;
+        ball.vel.x-=(1+coeff_restitution)*ball.vel.x;
     }
-    if ((posX < radius))
+    if ((ball.pos.x < radius))
     {
-        posX += radius;
-        Vel.x-=(1+coeff_restitution)*Vel.x;
+        ball.pos.x = radius;
+        ball.vel.x-=(1+coeff_restitution)*ball.vel.x;
     }
     
-    if ((posY+(radius)>screenHeight))
+    if ((ball.pos.y+(radius)>screenHeight))
     {
-        posY += -radius;
-        Vel.y-=(1+coeff_restitution)*Vel.y;
+        ball.pos.y = screenHeight-radius;
+        ball.vel.y-=(1+coeff_restitution)*ball.vel.y;
     }
-    if ((posY < radius))
+    if ((ball.pos.y < radius))
     {
-        posY += radius;
-        Vel.y-=(1+coeff_restitution)*Vel.y;
+        ball.pos.y = radius;
+        ball.vel.y-=(1+coeff_restitution)*ball.vel.y;
     }
 
 
     // make friction work
-        friction.x = -drag_coeff*Vel.x;
-        friction.y = -drag_coeff*Vel.y;
+        ball.friction.x = -ball.drag*ball.vel.x;
+        ball.friction.y = -ball.drag*ball.vel.y;
         //----------------------------------------------------------------------------------
     // Update
         //----------------------------------------------------------------------------------
-    Vel = Vector2Add(Vector2Scale(Vector2Add(accel,friction),DelT),Vel);
-    posX += Vel.x*DelT;
-    posY += Vel.y*DelT;
-    accel = Vector2Zero();
+    ball.vel = Vector2Add(Vector2Scale(Vector2Add(ball.accel,ball.friction),DelT),ball.vel);
+    ball.pos.x += ball.vel.x*DelT;
+    ball.pos.y += ball.vel.y*DelT;
+    ball.accel = Vector2Zero();
     // speed calculation for displaying
-    speed = Vector2Length(Vel);
+    speed = Vector2Length(ball.vel);
 
         //----------------------------------------------------------------------------------
     // Draw
@@ -104,7 +127,7 @@ int main()
             ClearBackground(BLACK);
             sprintf(string_speed,"%0.0f", speed);
             DrawText(string_speed,0,0,20,WHITE);
-            DrawCircle(posX,posY,radius,Teal);
+            DrawCircle(ball.pos.x,ball.pos.y,radius,Teal);
         EndDrawing();
         //----------------------------------------------------------------------------------
     }
